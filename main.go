@@ -1,3 +1,6 @@
+// Copyright 2022 VMware Tanzu Community Edition contributors. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -7,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	linturl "github.com/JitenPalaparthi/urllinter/pkg/lint"
+	linturl "github.com/vmware-tanzu/community-edition/hack/urllinter/pkg/lint"
 )
 
 var (
@@ -60,5 +63,4 @@ func main() {
 	if isFatal {
 		os.Exit(1)
 	}
-
 }

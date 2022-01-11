@@ -1,10 +1,12 @@
+// Copyright 2022 VMware Tanzu Community Edition contributors. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 package lint
 
 import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -40,12 +42,12 @@ func New(configFile string) (*LinkLintConfig, error) {
 	if configFile == "" {
 		return nil, errors.New("configuration file cannot be empty")
 	}
-	file, err := ioutil.ReadFile(configFile)
+	file, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
 	llc := &LinkLintConfig{}
-	err = yaml.Unmarshal([]byte(file), llc)
+	err = yaml.Unmarshal(file, llc)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +74,10 @@ func (llc *LinkLintConfig) Init(dir string) error {
 			for _, exclude := range llc.ExcludePaths {
 				if strings.HasPrefix(path, exclude) {
 					return nil
-
 				} else if strings.HasPrefix(exclude, "*.") {
 					if filepath.Ext(path) == filepath.Ext(exclude) {
 						return nil
 					}
-
 				} else if string(exclude[len(exclude)-1]) != "/" { // its a file
 					if path == exclude {
 						return nil
@@ -87,7 +87,10 @@ func (llc *LinkLintConfig) Init(dir string) error {
 			ext := filepath.Ext(path)
 			for _, ex := range llc.IncludeExts {
 				if ext == ex {
-					llc.ReadFile(path)
+					err = llc.ReadFile(path)
+					if err != nil {
+						return err
+					}
 				}
 			}
 			return nil
@@ -169,7 +172,7 @@ func (llc *LinkLintConfig) LintAll() bool {
 	for key := range llc.LinkMap {
 		count++
 		fmt.Println("Currently checking ", count, " url(s) out of ", len(llc.LinkMap))
-		if !IsUrl(key) {
+		if !IsURL(key) {
 			isFatal = true
 			llc.OnFail("Invalid URL", key)
 			continue
@@ -199,7 +202,7 @@ func (llc *LinkLintConfig) LintAll() bool {
 	return isFatal
 }
 
-func IsUrl(str string) bool {
+func IsURL(str string) bool {
 	u, err := url.Parse(str)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
