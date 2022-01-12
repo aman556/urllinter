@@ -5,6 +5,8 @@ package lint
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -177,7 +179,11 @@ func (llc *LinkLintConfig) LintAll() bool {
 			llc.OnFail("Invalid URL", key)
 			continue
 		}
-		resp, err := http.Get(key)
+		cli := &http.Client{}
+		ctx := context.Background()
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, key, bytes.NewBuffer([]byte("")))
+		resp, err := cli.Do(req)
+
 		if err != nil {
 			isFatal = true
 			llc.OnFail(err.Error(), key)
@@ -191,6 +197,7 @@ func (llc *LinkLintConfig) LintAll() bool {
 				break
 			}
 		}
+		defer resp.Body.Close()
 		if accepted {
 			continue
 		} else {
